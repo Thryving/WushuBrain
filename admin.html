@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin Centre · 管理中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0e2a66;--navy-2:#163d8f;--blue:#2f7fe0;--sky:#e9f3fd;--red:#e2404e;--green:#18864b;--amber:#b07b06;--ink:#1a2440;--muted:#5b6785;--line:#d9e3f2}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Plus Jakarta Sans","Noto Sans SC",system-ui,sans-serif;background:#f3f7fd;color:var(--ink);font-size:15px}
+header{background:var(--navy);color:#fff;padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header b{font-weight:900}header a{color:#cfdcf5;font-size:.85rem}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px}
+.login{max-width:380px;margin:80px auto;background:#fff;border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(14,42,102,.1)}
+h1{color:var(--navy);font-size:1.4rem;margin:0 0 4px}h2{color:var(--navy);font-size:1.15rem;margin:0 0 12px}
+label{display:block;font-weight:700;font-size:.82rem;color:var(--navy);margin:12px 0 4px}
+input,select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fbfdff}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 16px;font-weight:800;background:var(--navy-2);color:#fff}
+button.red{background:var(--red)}button.ghost{background:var(--sky);color:var(--navy)}button.sm{padding:5px 10px;font-size:.8rem}
+button:disabled{opacity:.5}
+.err{color:var(--red);font-weight:700;font-size:.88rem;min-height:1.2em;margin-top:10px}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tabs button{background:#fff;color:var(--navy);border:2px solid var(--line)}
+.tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 6px 18px rgba(14,42,102,.07);margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(14,42,102,.07)}
+.stat small{color:var(--muted);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+.stat b{display:block;font-size:1.5rem;color:var(--navy)}
+.bar{height:8px;background:var(--sky);border-radius:99px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th{text-align:left;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.75rem;font-weight:800}
+.p-pending{background:#fff4d6;color:var(--amber)}.p-paid{background:#dff5e8;color:var(--green)}.p-cancelled{background:#f1f1f4;color:#777}
+.flag{color:var(--red);font-weight:700;font-size:.78rem}
+.muted{color:var(--muted)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input{max-width:260px}
+.people{margin:6px 0 0;padding:0;list-style:none}.people li{padding:3px 0;border-top:1px dashed var(--line)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;display:none;z-index:9}
+.switch{width:auto}
+.help{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+</style>
+</head>
+<body>
+<header><b>管理中心 · Admin Centre</b><span><a href="/" target="_blank">View site ↗</a> &nbsp; <a href="#" id="logout" hidden>Log out</a></span></header>
+
+<div id="login-view" class="login">
+  <h1>Admin login</h1><p class="muted" style="margin:0">脑优化与武术 · Registrations &amp; codes</p>
+  <form id="login-form">
+    <label>Username</label><input id="u" autocomplete="username" required>
+    <label>Password</label><input id="p" type="password" autocomplete="current-password" required>
+    <button style="width:100%;margin-top:18px">Log in</button>
+    <div class="err" id="login-err"></div>
+  </form>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <div class="tabs">
+    <button data-t="regs" class="on">报名 Registrations</button>
+    <button data-t="codes">优惠码 Discount codes</button>
+    <button data-t="settings">设置 Pricing &amp; settings</button>
+    <button class="ghost" id="reload">↻ Refresh</button>
+  </div>
+
+  <!-- REGISTRATIONS -->
+  <section data-t="regs">
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <div class="toolbar">
+        <input id="reg-search" placeholder="Search name / phone / email / code">
+        <select id="reg-filter" style="max-width:180px"><option value="">All statuses</option><option>pending</option><option>paid</option><option>cancelled</option></select>
+        <button class="ghost" id="csv-people">⬇ CSV — one row per participant</button>
+        <button class="ghost" id="csv-regs">⬇ CSV — one row per registration</button>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Submitted</th><th>Participants</th><th>Seats</th><th>Cert</th><th>Code</th><th>Amount</th><th>Proof</th><th>Status</th><th>Note</th><th></th></tr></thead>
+        <tbody id="reg-rows"></tbody>
+      </table></div>
+      <p class="help">Payment screenshots and the original submissions are also in Netlify → Forms → registration. “Amount mismatch” means the amount on the form differs from what the server expected — check before confirming.</p>
+    </div>
+  </section>
+
+  <!-- CODES -->
+  <section data-t="codes" hidden>
+    <div class="card">
+      <h2>Create discount codes 新增优惠码</h2>
+      <div class="row">
+        <div><label>Mode</label><select id="c-mode"><option value="range">Range (e.g. NSA1–NSA10)</option><option value="list">Specific code(s)</option></select></div>
+        <div class="m-range"><label>Prefix</label><input id="c-prefix" placeholder="NSA"></div>
+        <div class="m-range"><label>From</label><input id="c-from" type="number" value="1"></div>
+        <div class="m-range"><label>To</label><input id="c-to" type="number" value="10"></div>
+        <div class="m-list" hidden style="grid-column:span 3"><label>Code(s), separated by commas or spaces</label><input id="c-list" placeholder="EARLYCOACH, VIP2026"></div>
+      </div>
+      <div class="row">
+        <div><label>Discount % off standard price</label><input id="c-pct" type="number" min="1" max="100" value="10"></div>
+        <div><label>Max uses per code (0 = unlimited)</label><input id="c-max" type="number" min="0" value="1"></div>
+        <div><label>Expires on (optional)</label><input id="c-exp" type="date"></div>
+        <div><label>Note (e.g. partner org)</label><input id="c-note" placeholder="NSA members"></div>
+        <div><button id="c-add" style="width:100%">Create codes</button></div>
+      </div>
+      <p class="help">Codes take % off the <b>standard</b> price (S$800/seat). The customer automatically gets whichever is cheaper — code price, early-bird or group price. Codes never stack and never discount the certification fee. Re-creating an existing code updates its settings but keeps its usage count.</p>
+      <div class="err" id="c-err"></div>
+    </div>
+    <div class="card">
+      <div class="toolbar">
+        <input id="code-search" placeholder="Filter codes, e.g. STWF">
+        <button class="red sm" id="c-del-sel">Delete selected</button>
+        <span class="muted" id="code-count"></span>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th><input type="checkbox" id="c-all" class="switch"></th><th>Code</th><th>% off</th><th>Price / seat</th><th>Used / max</th><th>Expires</th><th>Note</th><th>Active</th><th></th></tr></thead>
+        <tbody id="code-rows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section data-t="settings" hidden>
+    <div class="card">
+      <h2>Pricing &amp; settings 价格与设置</h2>
+      <p class="help">Changes go live on the website immediately (no redeploy needed).</p>
+      <div class="row">
+        <div><label>Course start date</label><input id="s-courseStart" type="date"></div>
+        <div><label>Early bird ends (date, 23:59 SGT)</label><input id="s-ebDate" type="date"><p class="help" id="eb-help"></p></div>
+        <div><label>Early bird price / person (S$)</label><input id="s-early" type="number"></div>
+        <div><label>Standard price / person (S$)</label><input id="s-standard" type="number"></div>
+      </div>
+      <div class="row">
+        <div><label>Early-bird 2 seats total (S$)</label><input id="s-eg2" type="number"></div>
+        <div><label>Early-bird 3 seats total (S$)</label><input id="s-eg3" type="number"></div>
+        <div><label>Early-bird 4 seats total (S$)</label><input id="s-eg4" type="number"></div>
+      </div>
+      <div class="row">
+        <div><label>Group 2 seats total (S$)</label><input id="s-g2" type="number"></div>
+        <div><label>Group 3 seats total (S$)</label><input id="s-g3" type="number"></div>
+        <div><label>Group 4 seats total (S$)</label><input id="s-g4" type="number"></div>
+      </div>
+      <div class="row">
+        <div><label>China certification fee / person (S$)</label><input id="s-certFee" type="number"></div>
+        <div><label>Total seats (0 = don't track)</label><input id="s-capacity" type="number"></div>
+        <div><label>Show “seats left” when at or below</label><input id="s-showSeatsLeftBelow" type="number"></div>
+        <div><button id="s-save" style="width:100%">Save settings</button></div>
+      </div>
+      <div class="err" id="s-err"></div>
+    </div>
+    <div class="card">
+      <h2>Break-even check</h2>
+      <div id="be"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=q=>document.querySelector(q),$$=q=>document.querySelectorAll(q);
+let TOKEN=null, DATA=null;
+try{TOKEN=sessionStorage.getItem('xjtt_token')}catch(e){}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>'S$'+Number(n||0).toLocaleString('en-SG',{maximumFractionDigits:2});
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2200)}
+
+async function api(action,extra={}){
+  const r=await fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,action,...extra})});
+  const j=await r.json().catch(()=>({error:'Server unreachable'}));
+  if(r.status===401){logout();throw new Error(j.error)}
+  if(!r.ok)throw new Error(j.error||'Error');
+  return j;
+}
+
+/* ---- login ---- */
+$('#login-form').onsubmit=async e=>{
+  e.preventDefault();$('#login-err').textContent='';
+  try{
+    const r=await fetch('/api/admin-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:$('#u').value.trim(),pass:$('#p').value})});
+    const j=await r.json().catch(()=>({error:'Login service not reachable — is the site deployed with functions?'}));
+    if(!r.ok)throw new Error(j.error);
+    TOKEN=j.token;try{sessionStorage.setItem('xjtt_token',TOKEN)}catch(e){}
+    $('#p').value='';boot();
+  }catch(err){$('#login-err').textContent=err.message}
+};
+function logout(){TOKEN=null;try{sessionStorage.removeItem('xjtt_token')}catch(e){}$('#app').hidden=true;$('#login-view').hidden=false;$('#logout').hidden=true}
+$('#logout').onclick=e=>{e.preventDefault();logout()};
+
+async function boot(){
+  try{DATA=await api('load')}catch(e){$('#login-err').textContent=e.message;return}
+  $('#login-view').hidden=true;$('#app').hidden=false;$('#logout').hidden=false;
+  renderAll();
+}
+$('#reload').onclick=async()=>{DATA=await api('load');renderAll();toast('Refreshed')};
+
+/* ---- tabs ---- */
+$$('.tabs button[data-t]').forEach(b=>b.onclick=()=>{$$('.tabs button[data-t]').forEach(x=>x.classList.toggle('on',x===b));$$('section[data-t]').forEach(s=>s.hidden=s.dataset.t!==b.dataset.t)});
+
+function renderAll(){renderStats();renderRegs();renderCodes();renderSettings()}
+
+/* ---- registrations ---- */
+function renderStats(){
+  const r=DATA.regs.filter(x=>x.status!=='cancelled'), st=DATA.settings;
+  const seats=r.reduce((a,x)=>a+(x.seats||1),0), paid=r.filter(x=>x.status==='paid');
+  const paidAmt=paid.reduce((a,x)=>a+(x.declaredAmount||0),0), pend=r.filter(x=>x.status==='pending');
+  const certs=r.reduce((a,x)=>a+(x.certCount||0),0), courseRev=r.reduce((a,x)=>a+((x.expected&&x.expected.course)||0),0);
+  const cap=st.capacity||0;
+  $('#stats').innerHTML=`
+   <div class="stat"><small>Seats taken</small><b>${seats}${cap?' / '+cap:''}</b>${cap?`<div class="bar"><i style="width:${Math.min(100,seats/cap*100)}%"></i></div>`:''}</div>
+   <div class="stat"><small>Registrations</small><b>${r.length}</b></div>
+   <div class="stat"><small>Pending check</small><b style="color:var(--amber)">${pend.length}</b></div>
+   <div class="stat"><small>Confirmed paid</small><b style="color:var(--green)">${money(paidAmt)}</b></div>
+   <div class="stat"><small>Course fees (all active)</small><b>${money(courseRev)}</b><div class="bar"><i style="width:${Math.min(100,courseRev/9500*100)}%;background:var(--green)"></i></div><span class="muted" style="font-size:.75rem">${Math.round(courseRev/9500*100)}% of S$9,500 break-even</span></div>
+   <div class="stat"><small>China cert sign-ups</small><b>${certs}</b></div>`;
+}
+function renderRegs(){
+  const q=$('#reg-search').value.toLowerCase(), f=$('#reg-filter').value;
+  const rows=DATA.regs.filter(r=>(!f||r.status===f)&&(!q||JSON.stringify(r.participants).toLowerCase().includes(q)||(r.discountCode||'').toLowerCase().includes(q)));
+  $('#reg-rows').innerHTML=rows.map(r=>{
+    const ppl=r.participants.map((p,i)=>`<li><b>${esc(p.name)}</b> ${esc(p.nameZh)} · ${esc(p.phone)} · ${esc(p.email)}<br><span class="muted">${esc(p.role)}${p.org?' · '+esc(p.org):''}${p.cert==='china'?' · <b style="color:var(--red)">+China cert</b>':''}</span></li>`).join('');
+    const proof=r.paymentProof?`<a href="${esc(typeof r.paymentProof==='string'?r.paymentProof:'#')}" target="_blank" rel="noopener">View</a>`:'<span class="muted">—</span>';
+    const d=new Date(r.createdAt);
+    return `<tr>
+      <td style="white-space:nowrap">${d.toLocaleDateString('en-SG',{day:'numeric',month:'short'})}<br><span class="muted">${d.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'})}</span></td>
+      <td><ul class="people">${ppl}</ul>${r.question?`<div class="muted" style="margin-top:4px">Q: ${esc(r.question)}</div>`:''}${r.comments?`<div style="margin-top:4px;color:var(--navy)"><b>Comments:</b> ${esc(r.comments)}</div>`:''}</td>
+      <td>${r.seats}</td><td>${r.certCount||0}</td>
+      <td>${esc(r.discountCode||'—')}</td>
+      <td style="white-space:nowrap"><b>${money(r.declaredAmount)}</b><br><span class="muted">${esc((r.expected&&r.expected.tier)||'')}</span>${(r.flags||[]).map(x=>`<div class="flag">⚠ ${esc(x)}</div>`).join('')}</td>
+      <td>${proof}</td>
+      <td><select data-status="${r.id}" style="min-width:110px">${['pending','paid','cancelled'].map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select><div style="margin-top:4px"><span class="pill p-${r.status}">${r.status}</span></div></td>
+      <td><textarea data-note="${r.id}" rows="2" style="min-width:140px">${esc(r.adminNote)}</textarea></td>
+      <td><button class="red sm" data-delreg="${r.id}">✕</button></td></tr>`}).join('')||`<tr><td colspan="10" class="muted" style="padding:20px">No registrations yet.</td></tr>`;
+}
+$('#reg-search').oninput=renderRegs;$('#reg-filter').onchange=renderRegs;
+$('#reg-rows').addEventListener('change',async e=>{
+  const id=e.target.dataset.status||e.target.dataset.note;if(!id)return;
+  const body=e.target.dataset.status?{id,status:e.target.value}:{id,adminNote:e.target.value};
+  try{const j=await api('updateReg',body);DATA.regs=DATA.regs.map(r=>r.id===id?j.reg:r);renderStats();renderRegs();toast('Saved')}catch(err){alert(err.message)}
+});
+$('#reg-rows').addEventListener('click',async e=>{
+  const id=e.target.dataset.delreg;if(!id)return;
+  if(!confirm('Delete this registration permanently? (Tip: set status to “cancelled” instead to keep a record.)'))return;
+  await api('deleteReg',{id});DATA.regs=DATA.regs.filter(r=>r.id!==id);renderStats();renderRegs();toast('Deleted');
+});
+function csv(rows){return '﻿'+rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n')}
+function dl(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click()}
+$('#csv-people').onclick=()=>{
+  const rows=[['Registration ID','Submitted','Status','Participant #','Name','Chinese name','Phone','Email','Role','Organisation','Certificate','Seats in registration','Discount code','Amount paid (registration)','Tier','Admin note']];
+  DATA.regs.forEach(r=>r.participants.forEach((p,i)=>rows.push([r.id,r.createdAt,r.status,i+1,p.name,p.nameZh,p.phone,p.email,p.role,p.org,p.cert==='china'?'Completion + China cert':'Completion only',r.seats,r.discountCode||'',i===0?r.declaredAmount:'',r.expected&&r.expected.tier,r.adminNote])));
+  dl('participants.csv',csv(rows));
+};
+$('#csv-regs').onclick=()=>{
+  const rows=[['Registration ID','Submitted','Status','Contact name','Contact phone','Contact email','Seats','China certs','Discount code','Amount on form','Expected amount','Tier','Flags','Payment proof','Question','Comments','Admin note']];
+  DATA.regs.forEach(r=>{const p=r.participants[0]||{};rows.push([r.id,r.createdAt,r.status,p.name,p.phone,p.email,r.seats,r.certCount,r.discountCode||'',r.declaredAmount,r.expected&&r.expected.total,r.expected&&r.expected.tier,(r.flags||[]).join('; '),typeof r.paymentProof==='string'?r.paymentProof:'',r.question,r.comments||'',r.adminNote])});
+  dl('registrations.csv',csv(rows));
+};
+
+/* ---- codes ---- */
+$('#c-mode').onchange=()=>{const l=$('#c-mode').value==='list';$$('.m-range').forEach(e=>e.hidden=l);$$('.m-list').forEach(e=>e.hidden=!l)};
+function renderCodes(){
+  const q=$('#code-search').value.trim().toUpperCase(), st=DATA.settings;
+  const list=Object.entries(DATA.codes).filter(([k])=>!q||k.includes(q)).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));
+  $('#code-count').textContent=`${list.length} code(s)`;
+  $('#code-rows').innerHTML=list.map(([k,c])=>{
+    const exp=c.expires&&new Date(c.expires+'T23:59:59+08:00')<new Date(), full=c.maxUses&&(c.used||0)>=c.maxUses;
+    return `<tr><td><input type="checkbox" class="switch c-sel" value="${esc(k)}"></td>
+    <td><b>${esc(k)}</b></td>
+    <td><input type="number" value="${c.pct}" data-cf="pct" data-code="${esc(k)}" style="width:70px"></td>
+    <td>${money(st.standard*(1-c.pct/100))}</td>
+    <td style="white-space:nowrap">${c.used||0} / <input type="number" value="${c.maxUses||0}" data-cf="maxUses" data-code="${esc(k)}" style="width:60px"> ${full?'<span class="flag">used up</span>':''}<br><button class="ghost sm" data-reset="${esc(k)}" style="margin-top:4px">reset uses</button></td>
+    <td><input type="date" value="${esc(c.expires||'')}" data-cf="expires" data-code="${esc(k)}">${exp?'<span class="flag">expired</span>':''}</td>
+    <td><input value="${esc(c.note||'')}" data-cf="note" data-code="${esc(k)}" style="min-width:120px"></td>
+    <td><input type="checkbox" class="switch" data-cf="active" data-code="${esc(k)}" ${c.active!==false?'checked':''}></td>
+    <td><button class="red sm" data-delcode="${esc(k)}">✕</button></td></tr>`}).join('')||`<tr><td colspan="9" class="muted" style="padding:20px">No codes yet.</td></tr>`;
+}
+$('#code-search').oninput=renderCodes;
+$('#c-add').onclick=async()=>{
+  $('#c-err').textContent='';
+  const b={pct:$('#c-pct').value,maxUses:$('#c-max').value,expires:$('#c-exp').value,note:$('#c-note').value};
+  if($('#c-mode').value==='list')b.code=$('#c-list').value;else Object.assign(b,{prefix:$('#c-prefix').value,from:$('#c-from').value,to:$('#c-to').value});
+  try{const j=await api('addCodes',b);DATA.codes=j.codes;renderCodes();toast(`${j.added} created, ${j.updated} updated`)}catch(e){$('#c-err').textContent=e.message}
+};
+$('#code-rows').addEventListener('change',async e=>{
+  const k=e.target.dataset.code,f=e.target.dataset.cf;if(!k||!f)return;
+  const v=e.target.type==='checkbox'?e.target.checked:e.target.value;
+  try{const j=await api('updateCode',{code:k,fields:{[f]:v}});DATA.codes=j.codes;renderCodes();toast('Saved '+k)}catch(err){alert(err.message)}
+});
+$('#code-rows').addEventListener('click',async e=>{
+  if(e.target.dataset.delcode){const k=e.target.dataset.delcode;if(!confirm('Delete code '+k+'?'))return;const j=await api('deleteCodes',{codes:[k]});DATA.codes=j.codes;renderCodes();toast('Deleted')}
+  if(e.target.dataset.reset){const k=e.target.dataset.reset;const j=await api('updateCode',{code:k,fields:{used:0}});DATA.codes=j.codes;renderCodes();toast('Reset')}
+});
+$('#c-all').onchange=e=>$$('.c-sel').forEach(c=>c.checked=e.target.checked);
+$('#c-del-sel').onclick=async()=>{const ks=[...$$('.c-sel:checked')].map(c=>c.value);if(!ks.length)return;if(!confirm(`Delete ${ks.length} code(s)?`))return;const j=await api('deleteCodes',{codes:ks});DATA.codes=j.codes;renderCodes();toast('Deleted')};
+
+/* ---- settings ---- */
+function renderSettings(){
+  const s=DATA.settings;
+  ['courseStart','early','standard','certFee','capacity','showSeatsLeftBelow'].forEach(k=>$('#s-'+k).value=s[k]);
+  $('#s-ebDate').value=new Date(s.earlyBirdEnd).toLocaleDateString('en-CA',{timeZone:'Asia/Singapore'});
+  [2,3,4].forEach(n=>{$('#s-g'+n).value=s.group[n];$('#s-eg'+n).value=s.earlyGroup[n]});
+  ebHelp();renderBE();
+}
+function ebHelp(){const cs=new Date($('#s-courseStart').value+'T00:00:00+08:00'),eb=new Date($('#s-ebDate').value+'T23:59:59+08:00');const days=Math.round((cs-eb)/86400000);$('#eb-help').textContent=isNaN(days)?'':`${days} day(s) before the course starts`}
+$('#s-courseStart').oninput=ebHelp;$('#s-ebDate').oninput=ebHelp;
+$('#s-save').onclick=async()=>{
+  $('#s-err').textContent='';
+  const g=id=>$('#s-'+id).value;
+  const settings={courseStart:g('courseStart'),earlyBirdEnd:g('ebDate')+'T23:59:59+08:00',early:g('early'),earlyGroup:{2:g('eg2'),3:g('eg3'),4:g('eg4')},standard:g('standard'),group:{2:g('g2'),3:g('g3'),4:g('g4')},certFee:g('certFee'),capacity:g('capacity'),showSeatsLeftBelow:g('showSeatsLeftBelow')};
+  try{const j=await api('saveSettings',{settings});DATA.settings=j.settings;renderAll();toast('Settings saved — live on site')}catch(e){$('#s-err').textContent=e.message}
+};
+function renderBE(){
+  const s=DATA.settings,cost=9500,c=n=>Math.ceil(cost/n);
+  const rows=[['All early bird (single)',s.early],['All early-bird 4-seat groups',s.earlyGroup[4]/4],['All standard (single)',s.standard],['All 2-seat groups',s.group[2]/2],['All 3-seat groups',s.group[3]/3],['All 4-seat groups',s.group[4]/4]];
+  $('#be').innerHTML=`<table><thead><tr><th>Scenario</th><th>Per seat</th><th>Seats to cover S$9,500</th></tr></thead><tbody>${rows.map(([n,p])=>`<tr><td>${n}</td><td>${money(p)}</td><td><b>${c(p)}</b></td></tr>`).join('')}</tbody></table><p class="help">Course fees only — China certification fees are excluded (pass-through cost).</p>`;
+}
+
+if(TOKEN)boot();
+</script>
+</body>
+</html>
