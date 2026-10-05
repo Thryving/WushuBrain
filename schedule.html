@@ -52,6 +52,7 @@ header.top p{color:var(--muted);margin:6px 0 0;max-width:760px}
 .c h3{margin:0 0 4px;font-size:1.02rem;color:var(--navy);line-height:1.45}
 .c ul{margin:4px 0 0;padding-left:1.2em;color:var(--ink)}
 .c li{margin:3px 0}
+.c li.num{list-style:none;margin-left:-1.2em}
 .c .sub{color:var(--muted);font-size:.93rem;margin:2px 0 0}
 .wu{margin-top:10px;background:#fdf1ef;border-left:4px solid var(--red);border-radius:10px;padding:10px 14px}
 .wu b{display:block;color:var(--red);font-size:.78rem;letter-spacing:.08em;margin-bottom:2px}
@@ -85,13 +86,15 @@ footer{background:#0b1d38;color:#b9c2d4;padding:26px 0;font-size:.85rem;text-ali
     <div class="en-t">Brain Optimisation &amp; Wushu</div>
     <div class="slogan">动脑 · 动身 · 动未来</div>
     <div class="eyebrow"><span class="zh">3天课程表</span><span class="en">3-day schedule</span></div>
-    <p class="zh">3天师资培训，全程中文授课，由胡仁杰讲师主讲。课程把武术桩功、身法与呼吸导引，融合进前庭、视动、原始反射与学习障碍干预体系——每个主题都有原理讲解，也有武术实操。</p>
-    <p class="en">A 3-day teacher training, taught in Mandarin by Hu Renjie. Wushu standing practice, body work and breath guidance are woven into vestibular, visual-motor, primitive-reflex and learning-difficulty intervention — every topic pairs the principles with hands-on wushu practice.</p>
+    <p class="zh">3天师资培训，全程中文授课，由胡仁杰讲师主讲。课程把武术桩功、身法与呼吸导引，融合进前庭、视动、原始反射与学习障碍干预体系——每个主题都有原理讲解，也有武术实操。课程也涵盖成人与乐龄学员的脑优化应用。</p>
+    <p class="en">A 3-day teacher training, taught in Mandarin by Hu Renjie. Wushu standing practice, body work and breath guidance are woven into vestibular, visual-motor, primitive-reflex and learning-difficulty intervention — every topic pairs the principles with hands-on wushu practice. Applications for adult and senior students are also covered.</p>
     <div class="meta">
       <span class="zh">21–23/12/2026（周一至周三）</span><span class="en">21–23 Dec 2026 (Mon–Wed)</span>
       <span class="zh">缘聚 Yuanju · 12 Arumugam Road</span><span class="en">Yuanju 缘聚 · 12 Arumugam Road</span>
+      <span class="zh">每天 9:00–18:00</span><span class="en">9:00am–6:00pm daily</span>
       <span class="zh">中文授课</span><span class="en">Taught in Mandarin</span>
     </div>
+    <p style="margin:18px 0 0"><a class="btn btn-red" href="img/schedule-poster.jpg" download="Brain-Optimisation-Wushu-schedule.jpg" target="_blank" rel="noopener"><span class="zh">下载课程表海报（中文）</span><span class="en">Download the schedule poster (Chinese)</span></a></p>
   </div>
 </header>
 
@@ -119,60 +122,58 @@ footer{background:#0b1d38;color:#b9c2d4;padding:26px 0;font-size:.85rem;text-ali
 /* Each session: t=time, zh/en = {h:title, li:[bullets], wu:[wushu lines], star:true for ✅ practicum} ; brk = break row */
 const DAYS=[
  {n:1,date:{zh:'第一天 · 12月21日（星期一）',en:'DAY 1 · Mon 21 Dec'},
-  title:{zh:'神经筑基',en:'Neural foundations'},
+  title:{zh:'脑神经基础与原始反射',en:'Brain foundations & primitive reflexes'},
   sub:{zh:'脑科学原理 + 武术静态神经调控',en:'Brain science + wushu static neuro-regulation'},
   sess:[
-   {t:'09:00–10:20',zh:{h:'脑神经的科学逻辑与神经发育学原理',wu:['武术与神经可塑性：桩功如何重塑本体感觉']},
-                    en:{h:'The science of the nervous system and neurodevelopment',wu:['Wushu and neuroplasticity: how standing practice reshapes proprioception']}},
+   {t:'09:00–10:20',zh:{h:'脑神经的科学逻辑',li:['神经发育学原理','胚胎同源性'],wu:['武术与神经可塑性：桩功如何重塑本体感觉']},
+                    en:{h:'The science of the nervous system',li:['Principles of neurodevelopment','Shared embryological origins'],wu:['Wushu and neuroplasticity: how standing practice reshapes proprioception']}},
    {t:'10:20–10:40',brk:{zh:'休息',en:'Break'}},
-   {t:'10:40–12:00',zh:{h:'原始反射精讲',wu:['武术静态站姿如何帮助整合原始反射'],star:true},
-                    en:{h:'Primitive reflexes in depth',wu:['How static wushu stances help integrate primitive reflexes'],star:true}},
+   {t:'10:40–12:00',zh:{h:'原始反射（一）',li:['1. 非对称性颈紧张反射','2. 对称性颈紧张反射','3. 迷路反射'],wu:['武术静态站姿如何帮助整合原始反射'],star:true},
+                    en:{h:'Primitive reflexes (1)',li:['1. Asymmetrical tonic neck reflex (ATNR)','2. Symmetrical tonic neck reflex (STNR)','3. Tonic labyrinthine reflex (TLR)'],wu:['How static wushu stances help integrate primitive reflexes'],star:true}},
    {t:'12:00–14:00',brk:{zh:'午餐',en:'Lunch'}},
-   {t:'14:00–16:00',zh:{h:'前庭功能测试体系：眼动、体态与平衡',wu:['武术定式眼随、沉肩立腰体态、无极桩实操']},
-                    en:{h:'Vestibular function testing: eye movement, posture and balance',wu:['Wushu "eyes follow" drills, upright posture and wuji standing post']}},
+   {t:'14:00–16:00',zh:{h:'原始反射（二）',li:['4. 脊柱盖兰特反射','5. 吮吸反射','6. 抓握反射','7. 口手反射','8. 巴宾斯基反射']},
+                    en:{h:'Primitive reflexes (2)',li:['4. Spinal Galant reflex','5. Sucking reflex','6. Palmar grasp reflex','7. Hand-to-mouth (Babkin) reflex','8. Babinski reflex']}},
    {t:'16:00–16:20',brk:{zh:'茶歇',en:'Tea break'}},
-   {t:'16:20–18:00',zh:{h:'前庭与情绪、自主神经的关系',wu:['武术呼吸导引：调节情绪，支持自主神经调节']},
-                    en:{h:'The vestibular system, emotion and the autonomic nervous system',wu:['Wushu breath guidance to regulate emotion and support autonomic nervous system regulation']}}
+   {t:'16:20–18:00',zh:{h:'前庭功能测试',li:['1. 前庭眼动——眼球运动、眼球稳定性训练','2. 前庭脊髓——体态矫正','3. 前庭小脑——平衡能力训练'],wu:['武术定式眼随、沉肩立腰体态、无极桩实操']},
+                    en:{h:'Vestibular function testing',li:['1. Vestibulo-ocular — eye movement and gaze-stability training','2. Vestibulospinal — posture correction','3. Vestibulocerebellar — balance training'],wu:['Wushu "eyes follow" drills, upright posture and wuji standing post']}}
   ]},
  {n:2,date:{zh:'第二天 · 12月22日（星期二）',en:'DAY 2 · Tue 22 Dec'},
-  title:{zh:'视动统合',en:'Visual-motor integration'},
+  title:{zh:'前庭系统与学习能力',en:'The vestibular system & learning'},
   sub:{zh:'前庭–视动整合 + 武术动态身法',en:'Vestibular–visual-motor integration + wushu dynamic body work'},
   sess:[
-   {t:'09:00–10:20',zh:{h:'视前庭互相作用',wu:['武术动态移步训练']},
-                    en:{h:'Visual–vestibular interaction',wu:['Wushu dynamic stepping drills']}},
+   {t:'09:00–10:20',zh:{h:'前庭系统（续）',li:['4. 前庭网状结构——平衡肌张力能力训练','5. 前庭自主神经——情绪、呼吸调节','6. 前庭皮层——大脑高级中枢'],wu:['武术呼吸导引：调节情绪，支持自主神经调节']},
+                    en:{h:'The vestibular system (continued)',li:['4. Vestibulo-reticular — muscle-tone and balance training','5. Vestibulo-autonomic — emotion and breathing regulation','6. Vestibular cortex — the brain\'s higher centres'],wu:['Wushu breath guidance to regulate emotion and support autonomic nervous system regulation']}},
    {t:'10:20–10:40',brk:{zh:'休息',en:'Break'}},
-   {t:'10:40–12:00',zh:{h:'阅读与书写困难',wu:['武术视动专项：眼随手动、身随眼动']},
-                    en:{h:'Reading and writing difficulties',wu:['Wushu visual-motor drills: eyes follow the hand, body follows the eyes']}},
+   {t:'10:40–12:00',zh:{h:'7. 视前庭互相作用',li:['视野稳定性学习障碍训练','读写困难解决策略'],wu:['武术视动专项：眼随手动、身随眼动；动态移步训练']},
+                    en:{h:'7. Visual–vestibular interaction',li:['Visual-stability training for learning difficulties','Strategies for reading and writing difficulties'],wu:['Wushu visual-motor drills: eyes follow the hand, body follows the eyes; dynamic stepping']}},
    {t:'12:00–14:00',brk:{zh:'午餐',en:'Lunch'}},
-   {t:'14:00–16:00',zh:{h:'数学与非语言学习困难',wu:['武术空间方位训练：转体、移步']},
-                    en:{h:'Maths and non-verbal learning difficulties',wu:['Wushu spatial-orientation drills: turning and stepping']}},
+   {t:'14:00–16:00',zh:{h:'学习困难解决策略',li:['数学困难解决策略','非语言学习困难解决策略'],wu:['武术空间方位训练：转体、移步']},
+                    en:{h:'Strategies for learning difficulties',li:['Maths difficulties','Non-verbal learning difficulties'],wu:['Wushu spatial-orientation drills: turning and stepping']}},
    {t:'16:00–16:20',brk:{zh:'茶歇',en:'Tea break'}},
-   {t:'16:20–18:00',zh:{h:'左右脑整合（ADHD）与兴趣单一',wu:['手眼与左右协调训练，配合武术对称 / 不对称动作']},
-                    en:{h:'Bilateral integration (ADHD) and narrow interests',wu:['Eye-hand and left-right coordination with symmetrical and asymmetrical wushu movement']}},
-   {t:'18:20–19:30',eve:true,zh:{h:'晚间练习：重力沙包 + 武术专项',wu:['本体感觉、空间位置觉、手眼协调与平衡综合练习'],star:true},
-                    en:{h:'Evening practice: weighted sandbag + wushu',wu:['Combined practice for proprioception, spatial awareness, eye-hand coordination and balance'],star:true}}
+   {t:'16:20–18:00',zh:{h:'左右脑整合障碍（ADHD）',li:['兴趣爱好单一','镜像疗法','空间位置觉训练','手眼协调训练'],wu:['手眼与左右协调训练，配合武术对称 / 不对称动作']},
+                    en:{h:'Left-right brain integration difficulties (ADHD)',li:['Narrow interests','Mirror therapy','Spatial-position awareness training','Eye-hand coordination training'],wu:['Eye-hand and left-right coordination with symmetrical and asymmetrical wushu movement']}}
   ]},
  {n:3,date:{zh:'第三天 · 12月23日（星期三）',en:'DAY 3 · Wed 23 Dec'},
-  title:{zh:'方案落地',en:'From plan to practice'},
+  title:{zh:'视听整合与综合训练',en:'Audio-visual integration & integrated training'},
   sub:{zh:'视听融合 + 武术干预方案设计、实操演练',en:'Audio-visual integration + designing integrated interventions'},
   sess:[
-   {t:'09:00–10:20',zh:{h:'视听理解与视听融合记忆',wu:['武术口令跟随训练']},
-                    en:{h:'Visual and auditory comprehension and memory',wu:['Wushu call-and-follow drills']}},
+   {t:'09:00–10:20',zh:{h:'视听整合',li:['视理解训练','听理解训练','视听融合记忆'],wu:['武术口令跟随训练']},
+                    en:{h:'Audio-visual integration',li:['Visual comprehension training','Auditory comprehension training','Audio-visual integrated memory'],wu:['Wushu call-and-follow drills']}},
    {t:'10:20–10:40',brk:{zh:'休息',en:'Break'}},
-   {t:'10:40–12:00',zh:{h:'语言与书写困难',wu:['武术分级动作设计']},
-                    en:{h:'Language and handwriting difficulties',wu:['Graded wushu movement design']}},
+   {t:'10:40–12:00',zh:{h:'语言与书写',li:['语言困难训练','书写困难训练'],wu:['武术分级动作设计']},
+                    en:{h:'Language and handwriting',li:['Language difficulties training','Handwriting difficulties training'],wu:['Graded wushu movement design']}},
    {t:'12:00–14:00',brk:{zh:'午餐',en:'Lunch'}},
-   {t:'14:00–15:00',zh:{h:'综合训练策略',wu:['武术平衡与身法组合训练']},
-                    en:{h:'Integrated training strategies',wu:['Combined wushu balance and body-work training']}},
+   {t:'14:00–15:00',zh:{h:'综合训练策略',li:['光、声音刺激','平衡训练'],wu:['武术平衡与身法组合训练']},
+                    en:{h:'Integrated training strategies',li:['Light and sound stimulation','Balance training'],wu:['Combined wushu balance and body-work training']}},
    {t:'15:00–15:20',brk:{zh:'茶歇',en:'Tea break'}},
-   {t:'15:20–17:00',zh:{h:'个性化落地方案设计与答疑',wu:['分组演练：完整一节【脑优化 + 武术】干预课'],star:true},
-                    en:{h:'Personalised action-plan design and Q&A',wu:['Group practicum: teach a complete "Brain Optimisation + Wushu" intervention lesson'],star:true}}
+   {t:'15:20–18:00',zh:{h:'多重任务训练',li:['落地方案设计、答疑'],wu:['分组演练：完整一节【脑优化 + 武术】干预课'],star:true},
+                    en:{h:'Multitasking training',li:['Action-plan design and Q&A'],wu:['Group practicum: teach a complete "Brain Optimisation + Wushu" intervention lesson'],star:true}}
   ]}
 ];
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function block(L,s){
   const d=s[L]; let h=`<h3>${esc(d.h)}</h3>`;
-  if(d.li&&d.li.length) h+=`<ul>${d.li.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  if(d.li&&d.li.length) h+=`<ul>${d.li.map(x=>`<li${/^\d+\./.test(x)?' class="num"':''}>${esc(x)}</li>`).join('')}</ul>`;
   if(d.wu&&d.wu.length) h+=`<div class="wu${d.star?' star':''}"><b>${L==='zh'?(d.star?'✅ 实操':'武术融合'):(d.star?'✅ HANDS-ON':'WUSHU INTEGRATION')}</b>${d.wu.map(esc).join('<br>')}</div>`;
   return `<div class="${L}">${h}</div>`;
 }
