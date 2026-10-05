@@ -1,4 +1,4 @@
-const { store, getSettings, getCodes, normCode, verify, json, DEFAULT_SETTINGS } = require('../lib/core');
+const { store, getSettings, getCodes, getCode, setCode, delCode, normCode, verify, json, DEFAULT_SETTINGS } = require('../lib/core');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { error: 'POST only' });
@@ -37,7 +37,6 @@ exports.handler = async (event) => {
 
       case 'addCodes': {
         // single: {code} or batch: {prefix, from, to}
-        const codes = await getCodes(s);
         const pct = Number(b.pct);
         if (!(pct > 0 && pct <= 100)) return json(400, { error: 'Discount % must be between 1 and 100' });
         let list = [];
@@ -47,39 +46,41 @@ exports.handler = async (event) => {
           if (!p || !(f >= 0) || !(t >= f) || t - f > 500) return json(400, { error: 'Check prefix and number range (max 500 codes at once)' });
           for (let i = f; i <= t; i++) list.push(p + i);
         }
+        const codes = await getCodes(s);
         let added = 0, updated = 0;
         for (const k of list) {
-          const prev = codes[k];
-          codes[k] = {
+          const prev = (await getCode(s, k)) || codes[k];
+          const v = {
             pct, maxUses: parseInt(b.maxUses, 10) || 0, expires: b.expires || '',
             note: b.note || '', active: true, used: prev ? prev.used || 0 : 0,
             createdAt: prev ? prev.createdAt : new Date().toISOString()
           };
+          await setCode(s, k, v); codes[k] = v;
           prev ? updated++ : added++;
         }
-        await s.setJSON('codes', codes);
         return json(200, { ok: true, added, updated, codes });
       }
 
       case 'updateCode': {
-        const codes = await getCodes(s);
         const k = normCode(b.code);
-        if (!codes[k]) return json(404, { error: 'Code not found' });
+        const c = await getCode(s, k);
+        if (!c) return json(404, { error: 'Code not found' });
         const f = b.fields || {};
-        if ('active' in f) codes[k].active = !!f.active;
-        if ('pct' in f) codes[k].pct = Number(f.pct);
-        if ('maxUses' in f) codes[k].maxUses = parseInt(f.maxUses, 10) || 0;
-        if ('expires' in f) codes[k].expires = f.expires || '';
-        if ('used' in f) codes[k].used = parseInt(f.used, 10) || 0;
-        if ('note' in f) codes[k].note = f.note || '';
-        await s.setJSON('codes', codes);
+        if ('active' in f) c.active = !!f.active;
+        if ('pct' in f) c.pct = Number(f.pct);
+        if ('maxUses' in f) c.maxUses = parseInt(f.maxUses, 10) || 0;
+        if ('expires' in f) c.expires = f.expires || '';
+        if ('used' in f) c.used = parseInt(f.used, 10) || 0;
+        if ('note' in f) c.note = f.note || '';
+        await setCode(s, k, c);
+        const codes = await getCodes(s); codes[k] = c;
         return json(200, { ok: true, codes });
       }
 
       case 'deleteCodes': {
-        const codes = await getCodes(s);
-        (b.codes || []).map(normCode).forEach(k => delete codes[k]);
-        await s.setJSON('codes', codes);
+        const ks = (b.codes || []).map(normCode).filter(Boolean);
+        for (const k of ks) await delCode(s, k);
+        const codes = await getCodes(s); ks.forEach(k => delete codes[k]);
         return json(200, { ok: true, codes });
       }
 

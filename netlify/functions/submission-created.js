@@ -1,5 +1,5 @@
 // Runs automatically whenever a Netlify Form is submitted.
-const { store, getSettings, getCodes, checkCode, quote, normCode } = require('../lib/core');
+const { store, getSettings, getCode, setCode, checkCode, quote, normCode } = require('../lib/core');
 
 exports.handler = async (event) => {
   try {
@@ -18,8 +18,9 @@ exports.handler = async (event) => {
     }
     const certCount = participants.filter(p => p.cert === 'china').length;
     const s = store(event);
-    const [st, codes] = await Promise.all([getSettings(s), getCodes(s)]);
     const code = normCode(d.discount_code);
+    const [st, one] = await Promise.all([getSettings(s), getCode(s, code)]);
+    const codes = one ? { [code]: one } : {};
     const chk = code ? checkCode(codes, code, new Date(payload.created_at || Date.now())) : null;
     const q = quote(st, { seats, certCount, code: chk }, new Date(payload.created_at || Date.now()));
     const declared = Number(d.amount) || 0;
@@ -38,8 +39,8 @@ exports.handler = async (event) => {
     });
 
     if (chk && chk.ok && q.codeApplied) {
-      const fresh = await getCodes(s);
-      if (fresh[chk.code]) { fresh[chk.code].used = (fresh[chk.code].used || 0) + 1; await s.setJSON('codes', fresh); }
+      const fresh = await getCode(s, chk.code);
+      if (fresh) { fresh.used = (fresh.used || 0) + 1; await setCode(s, chk.code, fresh); }
     }
     return { statusCode: 200, body: 'stored' };
   } catch (e) {

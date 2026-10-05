@@ -17,14 +17,23 @@ const DEFAULT_SETTINGS = {
 
 function store(event) {
   if (event) { try { connectLambda(event); } catch (e) { /* local / already connected */ } }
-  return getStore({ name: 'xjtt', consistency: 'strong' });
+  return getStore('xjtt');
 }
 
 async function getSettings(s) {
   const saved = (await s.get('settings', { type: 'json' })) || {};
   return { ...DEFAULT_SETTINGS, ...saved, group: { ...DEFAULT_SETTINGS.group, ...(saved.group || {}) }, earlyGroup: { ...DEFAULT_SETTINGS.earlyGroup, ...(saved.earlyGroup || {}) } };
 }
-async function getCodes(s) { return (await s.get('codes', { type: 'json' })) || {}; }
+// Each discount code is stored as its own entry ("code/NSA1") so edits never overwrite each other.
+async function getCodes(s) {
+  const { blobs } = await s.list({ prefix: 'code/' });
+  const out = {};
+  await Promise.all(blobs.map(async b => { const v = await s.get(b.key, { type: 'json' }); if (v) out[b.key.slice(5)] = v; }));
+  return out;
+}
+async function getCode(s, k) { return k ? await s.get('code/' + k, { type: 'json' }) : null; }
+async function setCode(s, k, v) { await s.setJSON('code/' + k, v); }
+async function delCode(s, k) { await s.delete('code/' + k); }
 
 function normCode(c) { return String(c || '').trim().toUpperCase().replace(/\s+/g, ''); }
 
@@ -111,4 +120,4 @@ async function seatsTaken(s) {
   return n;
 }
 
-module.exports = { DEFAULT_SETTINGS, store, getSettings, getCodes, normCode, checkCode, quote, sign, verify, safeEq, json, seatsTaken };
+module.exports = { DEFAULT_SETTINGS, store, getSettings, getCodes, getCode, setCode, delCode, normCode, checkCode, quote, sign, verify, safeEq, json, seatsTaken };
