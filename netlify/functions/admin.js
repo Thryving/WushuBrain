@@ -1,3 +1,4 @@
+const docs = require('../lib/docs');
 const { store, getSettings, getCodes, getCode, setCode, delCode, normCode, verify, json, DEFAULT_SETTINGS } = require('../lib/core');
 
 exports.handler = async (event) => {
@@ -29,7 +30,10 @@ exports.handler = async (event) => {
           group: { 2: num(n.group?.[2], cur.group[2]), 3: num(n.group?.[3], cur.group[3]), 4: num(n.group?.[4], cur.group[4]) },
           certFee: num(n.certFee, cur.certFee),
           capacity: num(n.capacity, cur.capacity),
-          showSeatsLeftBelow: num(n.showSeatsLeftBelow, cur.showSeatsLeftBelow)
+          showSeatsLeftBelow: num(n.showSeatsLeftBelow, cur.showSeatsLeftBelow),
+          invoicePrefix: (n.invoicePrefix ?? cur.invoicePrefix) || '',
+          receiptPrefix: (n.receiptPrefix ?? cur.receiptPrefix) || '',
+          invoiceDueDate: n.invoiceDueDate || cur.invoiceDueDate
         };
         await s.setJSON('settings', next);
         return json(200, { ok: true, settings: next });
@@ -90,8 +94,43 @@ exports.handler = async (event) => {
         if (!r) return json(404, { error: 'Registration not found' });
         if (b.status) r.status = b.status;
         if (typeof b.adminNote === 'string') r.adminNote = b.adminNote;
+        if (typeof b.invoiceSent === 'boolean') { r.invoiceSent = b.invoiceSent; if (b.invoiceSent && !r.invoiceSentAt) r.invoiceSentAt = new Date().toISOString(); }
+        if (typeof b.receiptSent === 'boolean') { r.receiptSent = b.receiptSent; if (b.receiptSent && !r.receiptSentAt) r.receiptSentAt = new Date().toISOString(); }
         await s.setJSON(key, r);
         return json(200, { ok: true, reg: r });
+      }
+
+      case 'docPdf':
+      case 'docSend': {
+        const kind = b.kind === 'receipt' ? 'receipt' : 'invoice';
+        const key = 'reg/' + b.id;
+        const r = await s.get(key, { type: 'json' });
+        if (!r) return json(404, { error: 'Registration not found' });
+        const st = await getSettings(s);
+        // Assign a number the first time. The admin page sends the next number it expects (hint),
+        // which keeps numbers unique even while storage is catching up.
+        const field = kind === 'invoice' ? 'invoiceNo' : 'receiptNo';
+        const dateField = kind === 'invoice' ? 'invoiceDate' : 'receiptDate';
+        const prefix = kind === 'invoice' ? st.invoicePrefix : st.receiptPrefix;
+        if (!r[field]) {
+          const { blobs } = await s.list({ prefix: 'reg/' });
+          let max = 0;
+          for (const x of blobs) {
+            const o = x.key === key ? r : await s.get(x.key, { type: 'json' });
+            const m = o && o[field] && String(o[field]).match(/(\d+)$/);
+            if (m) max = Math.max(max, parseInt(m[1], 10));
+          }
+          max = Math.max(max, (parseInt(b.hint, 10) || 1) - 1);
+          r[field] = prefix + String(max + 1).padStart(4, '0');
+          r[dateField] = new Date().toISOString();
+        }
+        const pdf = await docs.build(kind, r, st);
+        if (b.action === 'docSend') {
+          const to = await docs.sendDoc(kind, r, pdf);
+          r[kind + 'Sent'] = true; r[kind + 'SentAt'] = new Date().toISOString(); r[kind + 'SentTo'] = to;
+        }
+        await s.setJSON(key, r);
+        return json(200, { ok: true, reg: r, filename: `${kind === 'invoice' ? 'Invoice' : 'Receipt'}_${r[field]}.pdf`, pdf: b.action === 'docPdf' ? pdf.toString('base64') : undefined });
       }
 
       case 'deleteReg': {

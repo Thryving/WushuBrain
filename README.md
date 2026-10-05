@@ -6,7 +6,10 @@
 | `index.html` | Public bilingual landing page + registration form |
 | `admin.html` | Admin Centre (open at `yoursite/admin`) |
 | `thank-you.html` | Shown after someone registers |
-| `netlify/functions/` | Small backend: live pricing, discount codes, admin login, saving registrations |
+| `schedule.html` | Full 3-day schedule page (linked from the main page) |
+| `netlify/functions/` | Small backend: live pricing, discount codes, admin login, saving registrations, invoices & receipts |
+| `netlify/lib/docs.js` | Builds the invoice / receipt PDFs and emails them |
+| `netlify/assets/` | Logo, SGQR and Chinese font used inside the PDFs |
 | `img/` | Poster, trainer photo, SGQR |
 
 ## Deploy (one-time, ~15 minutes)
@@ -26,6 +29,16 @@ The Admin Centre and discount codes need Netlify's backend functions, which **do
 
 To change the website later, edit the file on GitHub (pencil icon) → Commit. Netlify redeploys automatically.
 
+## Email for invoices & receipts (Zoho)
+The admin centre emails invoices/receipts from your Zoho mailbox.
+1. Zoho Mail → profile picture → **My Account → Security → App Passwords** → **Generate New Password** (name it "Netlify"). Copy the password shown.
+2. Netlify → Site configuration → Environment variables → add (Production value):
+   - `SMTP_USER` = jasmine@thryving.sg
+   - `SMTP_PASS` = the Zoho app password
+3. Deploys → Trigger deploy.
+(Optional: `SMTP_HOST` defaults to `smtppro.zoho.com`; only change it if Zoho tells you a different server.)
+Every email also BCCs your own mailbox, so you keep a copy.
+
 ## Is Netlify Forms free?
 Yes. On Netlify's current free plan (credit-based), form submissions are free and unlimited. The backend functions and storage used by the Admin Centre also run on the free plan; a small course site like this uses very few of the 300 monthly free credits. (Older “legacy” free accounts were limited to 100 submissions per month — check Netlify → Usage if your account is older.)
 
@@ -38,6 +51,7 @@ Yes. On Netlify's current free plan (credit-based), form submissions are free an
 - **Discount codes**: create ranges (NSA1–NSA10) or single codes, set % off standard price, max uses, expiry, notes; edit, deactivate, reset or delete any time.
 - **Pricing & settings**: prices, early-bird end date, certification fee, seat capacity — changes are live instantly, no redeploy.
 - **Break-even table** and progress towards S$9,500.
+- **Invoices & receipts**: per registration — *Make invoice / Make receipt* (opens the PDF), *Send* (emails it to the registrant), and *Invoice sent / Receipt sent* tick boxes. Numbers (BW26-0001, RC-BW26-0001…) and the invoice due date are set under Pricing & settings.
 
 ## Before going live
 - Scan the PayNow QR on the page with your banking app and check it shows **THRYVING PTE. LTD.** and the right amount.

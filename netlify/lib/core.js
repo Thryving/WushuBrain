@@ -12,6 +12,9 @@ const DEFAULT_SETTINGS = {
   group: { 2: 1440, 3: 2040, 4: 2560 }, // standard group totals
   certFee: 200,          // China national certification, per person (optional)
   capacity: 30,          // total seats; 0 = don't show seats left
+  invoicePrefix: 'BW26-',     // invoice numbers: BW26-0001, BW26-0002 ...
+  receiptPrefix: 'RC-BW26-',  // receipt numbers: RC-BW26-0001 ...
+  invoiceDueDate: '2026-11-30',
   showSeatsLeftBelow: 10 // only show "seats left" when at or below this
 };
 

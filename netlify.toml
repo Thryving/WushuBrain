@@ -4,6 +4,8 @@
 
 [functions]
   node_bundler = "esbuild"
+  external_node_modules = ["pdfkit", "nodemailer"]
+  included_files = ["netlify/assets/**"]
 
 [[redirects]]
   from = "/api/*"

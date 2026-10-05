@@ -44,6 +44,10 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;display:none;z-index:9}
 .switch{width:auto}
 .help{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.docs{min-width:190px}
+.doc{padding:6px 0;border-bottom:1px dashed var(--line)}.doc:last-child{border-bottom:0}
+.tick{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);margin:0;font-size:.82rem}
+.btns{display:flex;gap:6px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -78,7 +82,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
         <button class="ghost" id="csv-regs">⬇ CSV — one row per registration</button>
       </div>
       <div class="tablewrap"><table>
-        <thead><tr><th>Submitted</th><th>Participants</th><th>Seats</th><th>Cert</th><th>Code</th><th>Amount</th><th>Proof</th><th>Status</th><th>Note</th><th></th></tr></thead>
+        <thead><tr><th>Submitted</th><th>Participants</th><th>Seats</th><th>Cert</th><th>Code</th><th>Amount</th><th>Proof</th><th>Status</th><th>Invoice / Receipt</th><th>Note</th><th></th></tr></thead>
         <tbody id="reg-rows"></tbody>
       </table></div>
       <p class="help">Payment screenshots and the original submissions are also in Netlify → Forms → registration. “Amount mismatch” means the amount on the form differs from what the server expected — check before confirming.</p>
@@ -144,6 +148,11 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
         <div><label>China certification fee / person (S$)</label><input id="s-certFee" type="number"></div>
         <div><label>Total seats (0 = don't track)</label><input id="s-capacity" type="number"></div>
         <div><label>Show “seats left” when at or below</label><input id="s-showSeatsLeftBelow" type="number"></div>
+      </div>
+      <div class="row">
+        <div><label>Invoice number prefix</label><input id="s-invoicePrefix" placeholder="BW26-"></div>
+        <div><label>Receipt number prefix</label><input id="s-receiptPrefix" placeholder="RC-BW26-"></div>
+        <div><label>Invoice due date</label><input id="s-invoiceDueDate" type="date"></div>
         <div><button id="s-save" style="width:100%">Save settings</button></div>
       </div>
       <div class="err" id="s-err"></div>
@@ -229,16 +238,57 @@ function renderRegs(){
       <td style="white-space:nowrap"><b>${money(r.declaredAmount)}</b><br><span class="muted">${esc((r.expected&&r.expected.tier)||'')}</span>${(r.flags||[]).map(x=>`<div class="flag">⚠ ${esc(x)}</div>`).join('')}</td>
       <td>${proof}</td>
       <td><select data-status="${r.id}" style="min-width:110px">${['pending','paid','cancelled'].map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select><div style="margin-top:4px"><span class="pill p-${r.status}">${r.status}</span></div></td>
+      <td class="docs">${docCell(r,'invoice')}${docCell(r,'receipt')}</td>
       <td><textarea data-note="${r.id}" rows="2" style="min-width:140px">${esc(r.adminNote)}</textarea></td>
-      <td><button class="red sm" data-delreg="${r.id}">✕</button></td></tr>`}).join('')||`<tr><td colspan="10" class="muted" style="padding:20px">No registrations yet.</td></tr>`;
+      <td><button class="red sm" data-delreg="${r.id}">✕</button></td></tr>`}).join('')||`<tr><td colspan="11" class="muted" style="padding:20px">No registrations yet.</td></tr>`;
+}
+function docCell(r,kind){
+  const no=kind==='invoice'?r.invoiceNo:r.receiptNo, sent=r[kind+'Sent'], at=r[kind+'SentAt'];
+  const label=kind==='invoice'?'Invoice':'Receipt';
+  return `<div class="doc">
+    <label class="tick"><input type="checkbox" class="switch" data-sent="${kind}" data-id="${r.id}" ${sent?'checked':''}> ${label} sent</label>
+    <div class="muted" style="font-size:.75rem">${no?esc(no):'no number yet'}${at?' · '+new Date(at).toLocaleDateString('en-SG',{day:'numeric',month:'short'}):''}</div>
+    <div class="btns"><button class="ghost sm" data-make="${kind}" data-id="${r.id}">Make ${label.toLowerCase()}</button><button class="sm" data-send="${kind}" data-id="${r.id}">Send</button></div>
+  </div>`;
+}
+function nextHint(kind){
+  const f=kind==='invoice'?'invoiceNo':'receiptNo'; let m=0;
+  DATA.regs.forEach(r=>{const x=r[f]&&String(r[f]).match(/(\d+)$/); if(x) m=Math.max(m,+x[1])}); return m+1;
+}
+async function docAction(action,kind,id,btn){
+  const r=DATA.regs.find(x=>x.id===id);
+  if(kind==='receipt'&&r.status!=='paid'&&!confirm('This registration is not marked "paid" yet. Make the receipt anyway?'))return;
+  if(action==='docSend'){
+    const to=(r.participants[0]||{}).email;
+    if(!confirm(`Send the ${kind} to ${to||'(no email!)'}?\nA copy will also be sent to your own mailbox.`))return;
+  }
+  const old=btn.textContent; btn.disabled=true; btn.textContent=action==='docSend'?'Sending…':'Making…';
+  try{
+    const j=await api(action,{id,kind,hint:nextHint(kind)});
+    DATA.regs=DATA.regs.map(x=>x.id===id?j.reg:x); renderRegs();
+    if(j.pdf){
+      const bin=atob(j.pdf), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+      const url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));
+      const w=window.open(url,'_blank');
+      if(!w){const a=document.createElement('a');a.href=url;a.download=j.filename;a.click();}
+      toast(j.filename+' ready');
+    } else toast(`${kind==='invoice'?'Invoice':'Receipt'} emailed to ${j.reg[kind+'SentTo']}`);
+  }catch(e){alert(e.message);btn.disabled=false;btn.textContent=old}
 }
 $('#reg-search').oninput=renderRegs;$('#reg-filter').onchange=renderRegs;
 $('#reg-rows').addEventListener('change',async e=>{
+  if(e.target.dataset.sent){
+    const id=e.target.dataset.id, k=e.target.dataset.sent;
+    try{const j=await api('updateReg',{id,[k+'Sent']:e.target.checked});DATA.regs=DATA.regs.map(r=>r.id===id?j.reg:r);toast('Saved')}catch(err){alert(err.message)}
+    return;
+  }
   const id=e.target.dataset.status||e.target.dataset.note;if(!id)return;
   const body=e.target.dataset.status?{id,status:e.target.value}:{id,adminNote:e.target.value};
   try{const j=await api('updateReg',body);DATA.regs=DATA.regs.map(r=>r.id===id?j.reg:r);renderStats();renderRegs();toast('Saved')}catch(err){alert(err.message)}
 });
 $('#reg-rows').addEventListener('click',async e=>{
+  if(e.target.dataset.make) return docAction('docPdf',e.target.dataset.make,e.target.dataset.id,e.target);
+  if(e.target.dataset.send) return docAction('docSend',e.target.dataset.send,e.target.dataset.id,e.target);
   const id=e.target.dataset.delreg;if(!id)return;
   if(!confirm('Delete this registration permanently? (Tip: set status to “cancelled” instead to keep a record.)'))return;
   await api('deleteReg',{id});DATA.regs=DATA.regs.filter(r=>r.id!==id);renderStats();renderRegs();toast('Deleted');
@@ -251,8 +301,8 @@ $('#csv-people').onclick=()=>{
   dl('participants.csv',csv(rows));
 };
 $('#csv-regs').onclick=()=>{
-  const rows=[['Registration ID','Submitted','Status','Contact name','Contact phone','Contact email','Seats','China certs','Discount code','Amount on form','Expected amount','Tier','Flags','Payment proof','Question','Comments','Admin note']];
-  DATA.regs.forEach(r=>{const p=r.participants[0]||{};rows.push([r.id,r.createdAt,r.status,p.name,p.phone,p.email,r.seats,r.certCount,r.discountCode||'',r.declaredAmount,r.expected&&r.expected.total,r.expected&&r.expected.tier,(r.flags||[]).join('; '),typeof r.paymentProof==='string'?r.paymentProof:'',r.question,r.comments||'',r.adminNote])});
+  const rows=[['Registration ID','Submitted','Status','Contact name','Contact phone','Contact email','Seats','China certs','Discount code','Amount on form','Expected amount','Tier','Flags','Payment proof','Question','Comments','Invoice no','Invoice sent','Receipt no','Receipt sent','Admin note']];
+  DATA.regs.forEach(r=>{const p=r.participants[0]||{};rows.push([r.id,r.createdAt,r.status,p.name,p.phone,p.email,r.seats,r.certCount,r.discountCode||'',r.declaredAmount,r.expected&&r.expected.total,r.expected&&r.expected.tier,(r.flags||[]).join('; '),typeof r.paymentProof==='string'?r.paymentProof:'',r.question,r.comments||'',r.invoiceNo||'',r.invoiceSent?'yes':'',r.receiptNo||'',r.receiptSent?'yes':'',r.adminNote])});
   dl('registrations.csv',csv(rows));
 };
 
@@ -296,7 +346,7 @@ $('#c-del-sel').onclick=async()=>{const ks=[...$$('.c-sel:checked')].map(c=>c.va
 /* ---- settings ---- */
 function renderSettings(){
   const s=DATA.settings;
-  ['courseStart','early','standard','certFee','capacity','showSeatsLeftBelow'].forEach(k=>$('#s-'+k).value=s[k]);
+  ['courseStart','early','standard','certFee','capacity','showSeatsLeftBelow','invoicePrefix','receiptPrefix','invoiceDueDate'].forEach(k=>$('#s-'+k).value=s[k]??'');
   $('#s-ebDate').value=new Date(s.earlyBirdEnd).toLocaleDateString('en-CA',{timeZone:'Asia/Singapore'});
   [2,3,4].forEach(n=>{$('#s-g'+n).value=s.group[n];$('#s-eg'+n).value=s.earlyGroup[n]});
   ebHelp();renderBE();
@@ -306,7 +356,7 @@ $('#s-courseStart').oninput=ebHelp;$('#s-ebDate').oninput=ebHelp;
 $('#s-save').onclick=async()=>{
   $('#s-err').textContent='';
   const g=id=>$('#s-'+id).value;
-  const settings={courseStart:g('courseStart'),earlyBirdEnd:g('ebDate')+'T23:59:59+08:00',early:g('early'),earlyGroup:{2:g('eg2'),3:g('eg3'),4:g('eg4')},standard:g('standard'),group:{2:g('g2'),3:g('g3'),4:g('g4')},certFee:g('certFee'),capacity:g('capacity'),showSeatsLeftBelow:g('showSeatsLeftBelow')};
+  const settings={courseStart:g('courseStart'),earlyBirdEnd:g('ebDate')+'T23:59:59+08:00',early:g('early'),earlyGroup:{2:g('eg2'),3:g('eg3'),4:g('eg4')},standard:g('standard'),group:{2:g('g2'),3:g('g3'),4:g('g4')},certFee:g('certFee'),capacity:g('capacity'),showSeatsLeftBelow:g('showSeatsLeftBelow'),invoicePrefix:g('invoicePrefix'),receiptPrefix:g('receiptPrefix'),invoiceDueDate:g('invoiceDueDate')};
   try{const j=await api('saveSettings',{settings});DATA.settings=j.settings;renderAll();toast('Settings saved — live on site')}catch(e){$('#s-err').textContent=e.message}
 };
 function renderBE(){
