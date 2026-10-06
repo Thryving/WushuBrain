@@ -27,3 +27,9 @@
   for = "/img/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+  [[redirects]]
+  from = "https://subdomain.netlify.app"
+  to = "https://mysubdomain.mydomain.sg"
+  status = 301
+  force = true  
