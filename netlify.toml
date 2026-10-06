@@ -29,7 +29,7 @@
     Cache-Control = "public, max-age=604800"
 
   [[redirects]]
-  from = "https://subdomain.netlify.app"
-  to = "https://mysubdomain.mydomain.sg"
+  from = "https://thewushubrain.netlify.app/"
+  to = "https://somatics.thewushubrain.thryving.sg/"
   status = 301
   force = true  
